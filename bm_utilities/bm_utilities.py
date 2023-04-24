@@ -1,3 +1,6 @@
+pip install geopandas arcgis pyarabic
+
+
 import re
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
