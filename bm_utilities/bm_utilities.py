@@ -10,8 +10,7 @@ import pandas as pd
 import pyarabic.araby as araby
 import string
 
-portal = GIS()
-portal
+
 
 class TextCleaner:
     def __init__(self, custom_stopwords=None, punctuation=None):
@@ -91,6 +90,8 @@ class AddressFinder:
       self.polygons = all_sub_regions
     
     def find_address(self,data_0_100k,k):
+        portal = GIS()
+        portal
         for address_1 ,idz ,_ in zip(data_0_100k["full_address"], data_0_100k["CUSTOMER_ID"],tqdm(range(len(data_0_100k)))):
             single_line_address = " مصر "+ str(address_1)
             text_clean = TextCleaner()
