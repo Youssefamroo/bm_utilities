@@ -1,19 +1,38 @@
-!pip install geopandas arcgis pyarabic
-
-
 import re
-import geopandas as gpd
+
 from shapely.geometry import Point, Polygon
 import numpy as np
-from arcgis.gis import GIS
-from arcgis.geocoding import geocode
+
 from tqdm import tqdm
 import pandas as pd
 
-import pyarabic.araby as araby
+
 import string
 
+try:
+    import geopandas as gpd
 
+except ImportError:
+    raise ImportError(
+        "geopandas needs to be installed to use this module. Use 'pip install geopandas' to install the package. See https://deckgl.readthedocs.io/en/latest/installation.html for more details."
+    )
+
+try:
+    from arcgis.gis import GIS
+    from arcgis.geocoding import geocode
+
+except ImportError:
+    raise ImportError(
+        "arcgis needs to be installed to use this module. Use 'pip install arcgis' to install the package. See https://deckgl.readthedocs.io/en/latest/installation.html for more details."
+    )
+
+try:
+    import pyarabic.araby as araby
+
+except ImportError:
+    raise ImportError(
+        "pyarabic needs to be installed to use this module. Use 'pip install pyarabic' to install the package. See https://deckgl.readthedocs.io/en/latest/installation.html for more details."
+    )
 
 class TextCleaner:
     def __init__(self, custom_stopwords=None, punctuation=None):
@@ -91,6 +110,7 @@ class AddressFinder:
       'ADM1_AR':'محافظة',
       },inplace=True)
       self.polygons = all_sub_regions
+      self.address = []
     
     def find_address(self,data_0_100k,k):
         portal = GIS()
@@ -108,5 +128,5 @@ class AddressFinder:
                     Longitude =  geocode_results[0]["location"].get("x",np.NAN)
                     input_data = pd.DataFrame({"Latitude":Latitude,"Longitude":Longitude,"address":address_1,"id":idz},index=[0])
                     get_polygon = PolygonFinder(self.polygons)
-                    address = get_polygon.get_closest_polygon(Latitude,Longitude)
-        return address
+                    self.address.append(get_polygon.get_closest_polygon(Latitude,Longitude))
+        return self.address

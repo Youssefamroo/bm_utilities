@@ -15,4 +15,3 @@ pyarabic
 numpy
 pandas
 shapely
-
