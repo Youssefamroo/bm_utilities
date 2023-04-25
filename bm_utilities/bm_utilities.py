@@ -1,4 +1,4 @@
-pip install geopandas arcgis pyarabic
+!pip install geopandas arcgis pyarabic
 
 
 import re
