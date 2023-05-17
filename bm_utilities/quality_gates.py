@@ -202,21 +202,24 @@ class QualityGates:
         
         return df
 
-    def cross_field_dependency_check(self,df, dependent_field, required_fields, dependency_condition):
+    def cross_field_dependency_check(self,df,cross_field_dependency_check_config):
+        for col in list(cross_field_dependency_check_config.keys()):
+            dependent_field=col
+            dependency_condition=cross_field_dependency_check_config[col]["dependency_condition"]
         # Evaluate the dependency condition for each row in the DataFrame
-        dependency_check = df.apply(lambda row: eval(dependency_condition), axis=1)
-        
-        # Identify the rows where the dependency condition is not satisfied
-        invalid_rows = df[~dependency_check]
-        
-        # Append the reason and explanation for rejection to the respective columns
-        reason_column = 'reason_of_rejection'
-        explanation_column = 'explanation_of_rejection'
-        df.loc[invalid_rows.index, reason_column] += ", invalid dependency"
-        df.loc[invalid_rows.index, explanation_column] = df.loc[invalid_rows.index, explanation_column].apply(
-            lambda explanation: explanation + ", " if explanation else ""
-        ) + "Invalid dependency for " + dependent_field
-        
+            dependency_check = df.apply(lambda row: eval(dependency_condition), axis=1)
+            
+            # Identify the rows where the dependency condition is not satisfied
+            invalid_rows = df[~dependency_check]
+            
+            # Append the reason and explanation for rejection to the respective columns
+            reason_column = 'reason_of_rejection'
+            explanation_column = 'explanation_of_rejection'
+            df.loc[invalid_rows.index, reason_column] += ", invalid dependency"
+            df.loc[invalid_rows.index, explanation_column] = df.loc[invalid_rows.index, explanation_column].apply(
+                lambda explanation: explanation + ", " if explanation else ""
+            ) + "Invalid dependency for " + dependent_field
+            
         return df
 
 
