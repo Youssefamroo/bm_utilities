@@ -189,16 +189,17 @@ class QualityGates:
         return df
 
 
-    def format_consistency_check(self,df, col_name, format_regex):
+    def format_consistency_check(self,df,format_consistency_check_config):
         print("format_check")
-        
-        reason_column = 'reason_of_rejection'
-        explanation_column = 'explanation_of_rejection'
-        
-        invalid_format_rows = df[~df[col_name].astype(str).str.match(format_regex, na=False)]
-        
-        df.loc[invalid_format_rows.index, reason_column] += self.invalid_format
-        df.loc[invalid_format_rows.index, explanation_column] += "Column '{}' has invalid format".format(col_name) +" "
+        for col_name in format_consistency_check_config.keys():
+            format_regex=format_consistency_check_config[col_name]["format"]
+            reason_column = 'reason_of_rejection'
+            explanation_column = 'explanation_of_rejection'
+            
+            invalid_format_rows = df[~df[col_name].astype(str).str.match(format_regex, na=False)]
+            
+            df.loc[invalid_format_rows.index, reason_column] += self.invalid_format
+            df.loc[invalid_format_rows.index, explanation_column] += "Column '{}' has invalid format".format(col_name) +" "
         
         return df
 
