@@ -6,4 +6,10 @@ def address_finder(geodf,address):
     construct = af.AddressFinder(geodf)
     address = af.find_address(address)
     return address
+def quality_gates_check(df,config):
+    my_gate = qg.QualityGates()
+    df=my_gate.run_Quality_Gates(df,config)
+    return df
+
+
 
