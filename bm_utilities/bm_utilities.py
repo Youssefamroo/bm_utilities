@@ -17,6 +17,7 @@ def quality_gates_check(df,config):
 #print(address_finder( gpd.read_file(r"D:\\Task_2\\point of interst\\Reading shape files\\egy_admbnda_adm3_capmas_20170421.shp"),
 #                     pd.read_csv(r"D:\\Task_2\\address_finder_application\\output\\Address_Finder\\Address Finder\\test_data.csv")))
 
+
 #for i in range(Branches_lat_long.shape[0]):
 #    if((Branches_lat_long[['lat']].iloc[i,:]).isna()):
 #        continue
