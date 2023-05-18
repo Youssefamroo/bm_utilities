@@ -34,7 +34,7 @@ except ImportError:
         "pyarabic needs to be installed to use this module. Use 'pip install pyarabic' to install the package. See https://deckgl.readthedocs.io/en/latest/installation.html for more details."
     )
 
-def clean_text(custom_stopwords=None, punctuation=None):
+def clean_text(text,custom_stopwords=None, punctuation=None):
         """clean data from any stopwords , punctuation and english litters
          input:
          if the input was list :
@@ -100,7 +100,6 @@ class AddressFinder:
             geocode_results = geocode(single_line_address)
             if len(geocode_results) != 0 :
                 country = geocode_results[0]["attributes"].get("Country",np.nan)
-
                 if country == 'EGY':
                     Latitude = geocode_results[0]["location"].get("y",np.NAN)
                     Longitude =  geocode_results[0]["location"].get("x",np.NAN)
