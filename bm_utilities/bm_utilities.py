@@ -1,21 +1,14 @@
-from Address_finder import AddressFinder as af
+from bm_utilities import Address_finder as af
+from bm_utilities import quality_gates as qg
+
 import geopandas as gpd
 import pandas as pd
-import quality_gates as qg
 
 
-
-class address_finder:
-    def __init__(self,geo_df):
-        self.construct = af(geo_df)
-    def get_address(self,address):
-        return self.construct.find_address(address)
-
-
-#def address_finder(geodf,address):
-#    construct = af(geodf)
-#    address = construct.find_address(address)
-#    return address
+def address_finder(geodf,address):
+    construct = af.AddressFinder(geodf)
+    address = construct.find_address(address)
+    return address
 
 
 def quality_gates_check(df,config):
@@ -26,8 +19,14 @@ def quality_gates_check(df,config):
 
 
 
-#print(address_finder( gpd.read_file(r"D:\\Task_2\\point of interst\\Reading shape files\\egy_admbnda_adm3_capmas_20170421.shp"),
-#                     pd.read_csv(r"D:\\Task_2\\address_finder_application\\output\\Address_Finder\\Address Finder\\test_data.csv")))
+
+'''
+geo_df = gpd.read_file(r"D:\\Task_2\\point of interst\\Reading shape files\\egy_admbnda_adm3_capmas_20170421.shp")
+address = pd.read_csv(r"D:\\Task_2\\address_finder_application\\output\\Address_Finder\\Address Finder\\test_data.csv")
+construct = AddressFinder(geo_df)
+address = construct.find_address(address)
+print(address)
+'''
 
 
 #for i in range(Branches_lat_long.shape[0]):
