@@ -22,17 +22,16 @@ class QualityGates:
     def run_Quality_Gates(self,df,config_path):
         config=self.read_config(config_path)
         
-        columns_names=config['columns_names']
-        num_of_records=config['num_of_records']
-        if(not self.check_structure(df,columns_names,num_of_records)):
+        
+        if(not self.check_structure(df,config)):
             return
         df["reason_of_rejection"]=""
         df["explanation_of_rejection"]=""
 
-        if("column_checklist" in config.keys()):
-            self.run_columns_checklist(df,config['column_checklist'])
-        if("row_checklist" in config.keys()):
-            self.run_rows_checklist(df,config['row_checklist'])
+        if("columns_checklist" in config.keys()):
+            self.run_columns_checklist(df,config['columns_checklist'])
+        if("rows_checklist" in config.keys()):
+            self.run_rows_checklist(df,config['rows_checklist'])
         self.clean_rejection_columns(df)
         return df
 
@@ -46,21 +45,32 @@ class QualityGates:
 
     ###########################################################################################################################################
     #high level checks
-    def check_structure(self,df,columns_names,num_of_records):
+    def check_structure(self,df,config):
         ans=True
-        if df.shape[0]!=num_of_records:
-            print("number of records is not matched")
-            ans=False
-        df_columns = df.columns.tolist()
-        list_set = set(columns_names)
-        df_set = set(df_columns)
+        
+        if("check_number_of_columns" in config):
+            if(config["check_number_of_columns"]==True and df.shape[1]!=config["num_columns"]):
+                print("number of columns is not matched")
+                ans=False
+        if ("check_number_of_records" in config):
+            num_of_records=config["num_of_records"]
+            if (config["check_number_of_records"]==True and df.shape[0]!=num_of_records):
+                print("number of records is not matched")
+                ans=False
+        if("check_number_of_columns" in config):
+            if(config["check_number_of_columns"]==True):
+                columns_names=config["columns_names"]
+                
+                df_columns = df.columns.tolist()
+                list_set = set(columns_names)
+                df_set = set(df_columns)
 
-        missing_in_list = df_set - list_set
-        missing_in_df = list_set - df_set
+                missing_in_list = df_set - list_set
+                missing_in_df = list_set - df_set
 
-        if missing_in_df or missing_in_list:
-            print("Columns names are not matched")
-            ans=False
+                if missing_in_df or missing_in_list:
+                    print("Columns names are not matched")
+                    ans=False
 
         return ans
 
@@ -189,10 +199,11 @@ class QualityGates:
         return df
 
 
-    def format_consistency_check(self,df,format_consistency_check_config):
+    def format_consistency_check(self,df, format_config):
         print("format_check")
-        for col_name in format_consistency_check_config.keys():
-            format_regex=format_consistency_check_config[col_name]["format"]
+        columns_to_check=list(format_config.keys())
+        for col_name in columns_to_check:
+            format_regex=format_config[col_name]["format_regex"]
             reason_column = 'reason_of_rejection'
             explanation_column = 'explanation_of_rejection'
             
