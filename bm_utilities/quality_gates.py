@@ -48,16 +48,16 @@ class QualityGates:
     def check_structure(self,df,config):
         ans=True
         
-        if("check_number_of_columns" in config):
+        if("check_number_of_columns" in config.keys()):
             if(config["check_number_of_columns"]==True and df.shape[1]!=config["num_columns"]):
                 print("number of columns is not matched")
                 ans=False
-        if ("check_number_of_records" in config):
+        if ("check_number_of_records" in config.keys()):
             num_of_records=config["num_of_records"]
             if (config["check_number_of_records"]==True and df.shape[0]!=num_of_records):
                 print("number of records is not matched")
                 ans=False
-        if("check_number_of_columns" in config):
+        if("check_number_of_columns" in config.keys()):
             if(config["check_number_of_columns"]==True):
                 columns_names=config["columns_names"]
                 
@@ -80,7 +80,6 @@ class QualityGates:
             self.completness_check(df,row_checklist_config["completness_check"])
         if "value_validity_check" in row_checklist_config:
             self.value_validity_check(df,row_checklist_config["value_validity_check"])
-            
         if "duplicate_entry_check" in row_checklist_config:
             self.duplicate_entry_check(df,row_checklist_config["duplicate_entry_check"])
         if "format_consistency_check" in row_checklist_config:
@@ -101,6 +100,15 @@ class QualityGates:
             columns_to_check=df.columns.tolist()
         else:
             columns_to_check=completness_check_config["columns_to_check"]
+            
+            #validate columns names
+            df_columns = df.columns.tolist()
+            list_set = set(columns_to_check)
+            df_set = set(df_columns)
+            if (list_set.issubset(df_set)==False):
+                raise Exception("Config File Error: Columns names are not in the dataframe compleness check")
+                return
+            
             reason_column = 'reason_of_rejection'
             explanation_column = 'explanation_of_rejection'
 
@@ -116,19 +124,24 @@ class QualityGates:
         values_allowed = column_config["values_allowed"]
         allowed_indices = []
         for allowed_value in values_allowed:
-            if "-" in allowed_value:
-                start, end = allowed_value.split("-")
-                allowed_indices.extend(df.loc[(df[col_name] >= float(start)) & (df[col_name] <= float(end))].index)
-            else:
-                operator, value = allowed_value[0], allowed_value[1:]
-                if operator == ">":
-                    allowed_indices.extend(df.loc[df[col_name] > float(value)].index)
-                elif operator == ">=":
-                    allowed_indices.extend(df.loc[df[col_name] >= float(value)].index)
-                elif operator == "<":
-                    allowed_indices.extend(df.loc[df[col_name] < float(value)].index)
-                elif operator == "<=":
-                    allowed_indices.extend(df.loc[df[col_name] <= float(value)].index)
+            
+            # Check if the allowed value contains any charachter other than digits, decimal point, and the operators >, >=, <, <= and -            
+            try:
+                if "-" in allowed_value:
+                    start, end = allowed_value.split("-")
+                    allowed_indices.extend(df.loc[(df[col_name] >= float(start)) & (df[col_name] <= float(end))].index)
+                else:
+                    operator, value = allowed_value[0], allowed_value[1:]
+                    if operator == ">":
+                        allowed_indices.extend(df.loc[df[col_name] > float(value)].index)
+                    elif operator == ">=":
+                        allowed_indices.extend(df.loc[df[col_name] >= float(value)].index)
+                    elif operator == "<":
+                        allowed_indices.extend(df.loc[df[col_name] < float(value)].index)
+                    elif operator == "<=":
+                        allowed_indices.extend(df.loc[df[col_name] <= float(value)].index)
+            except:
+                raise Exception("Config File Error: Invalid value in values allowed for column {}".format(col_name) )
         not_allowed_indices = df.index.difference(allowed_indices)
         df.loc[not_allowed_indices, "reason_of_rejection"] += self.value_not_allowed
         df.loc[not_allowed_indices, "explanation_of_rejection"] += f"Column {col_name} +  value not allowed"
@@ -149,15 +162,18 @@ class QualityGates:
         allowed_indices = []
         
         for allowed_range in values_allowed:
-            if "-" in allowed_range:
-                start, end = allowed_range.split("-")
-                start_date = pd.to_datetime(start.strip(), dayfirst=True, errors="coerce")
-                end_date = pd.to_datetime(end.strip(), dayfirst=True, errors="coerce")
-                allowed_indices.extend(df.loc[(df[col_name] >= start_date) & (df[col_name] <= end_date)].index)
-            else:
-                date_value = pd.to_datetime(allowed_range.strip(), dayfirst=True, errors="coerce")
-                allowed_indices.extend(df.loc[df[col_name] == date_value].index)
-        
+            try:
+                if "-" in allowed_range:
+                    start, end = allowed_range.split("-")
+                    start_date = pd.to_datetime(start.strip(), dayfirst=True, errors="coerce")
+                    end_date = pd.to_datetime(end.strip(), dayfirst=True, errors="coerce")
+                    allowed_indices.extend(df.loc[(df[col_name] >= start_date) & (df[col_name] <= end_date)].index)
+                else:
+                    date_value = pd.to_datetime(allowed_range.strip(), dayfirst=True, errors="coerce")
+                    allowed_indices.extend(df.loc[df[col_name] == date_value].index)
+            except:
+                raise Exception("Config File Error: Invalid value in values allowed for column {}".format(col_name) )
+            
         not_allowed_indices = df.index.difference(allowed_indices)
         df.loc[not_allowed_indices, "reason_of_rejection"] += self.value_not_allowed
         df.loc[not_allowed_indices, "explanation_of_rejection"] += ",column " + col_name + " value not allowed"
@@ -182,6 +198,14 @@ class QualityGates:
             columns_to_check = df.columns.tolist()
         else:
             columns_to_check = duplicate_entry_check_config["columns_to_check"]
+            
+        #validate columns names
+        df_columns = df.columns.tolist()
+        list_set = set(columns_to_check)
+        df_set = set(df_columns)
+        if (list_set.issubset(df_set)==False):
+            raise Exception("Config File Error: Columns names are not in the dataframe duplicate entry check")
+                
         
         reason_column = 'reason_of_rejection'
         explanation_column = 'explanation_of_rejection'
@@ -203,34 +227,41 @@ class QualityGates:
         print("format_check")
         columns_to_check=list(format_config.keys())
         for col_name in columns_to_check:
-            format_regex=format_config[col_name]["format_regex"]
-            reason_column = 'reason_of_rejection'
-            explanation_column = 'explanation_of_rejection'
-            
-            invalid_format_rows = df[~df[col_name].astype(str).str.match(format_regex, na=False)]
-            
-            df.loc[invalid_format_rows.index, reason_column] += self.invalid_format
-            df.loc[invalid_format_rows.index, explanation_column] += "Column '{}' has invalid format".format(col_name) +" "
+            try:
+                format_regex=format_config[col_name]["format_regex"]
+                reason_column = 'reason_of_rejection'
+                explanation_column = 'explanation_of_rejection'
+                
+                invalid_format_rows = df[~df[col_name].astype(str).str.match(format_regex, na=False)]
+                
+                df.loc[invalid_format_rows.index, reason_column] += self.invalid_format
+                df.loc[invalid_format_rows.index, explanation_column] += "Column '{}' has invalid format".format(col_name) +" "
+            except:
+                raise Exception("Config File Error: Invalid format regex for column {}".format(col_name))
         
         return df
 
     def cross_field_dependency_check(self,df,cross_field_dependency_check_config):
         for col in list(cross_field_dependency_check_config.keys()):
-            dependent_field=col
-            dependency_condition=cross_field_dependency_check_config[col]["dependency_condition"]
-        # Evaluate the dependency condition for each row in the DataFrame
-            dependency_check = df.apply(lambda row: eval(dependency_condition), axis=1)
-            
-            # Identify the rows where the dependency condition is not satisfied
-            invalid_rows = df[~dependency_check]
-            
-            # Append the reason and explanation for rejection to the respective columns
-            reason_column = 'reason_of_rejection'
-            explanation_column = 'explanation_of_rejection'
-            df.loc[invalid_rows.index, reason_column] += ", invalid dependency"
-            df.loc[invalid_rows.index, explanation_column] = df.loc[invalid_rows.index, explanation_column].apply(
-                lambda explanation: explanation + ", " if explanation else ""
-            ) + "Invalid dependency for " + dependent_field
+            try:
+                dependent_field=col
+                dependency_condition=cross_field_dependency_check_config[col]["dependency_condition"]
+                
+                # Evaluate the dependency condition for each row in the DataFrame
+                dependency_check = df.apply(lambda row: eval(dependency_condition), axis=1)
+                
+                # Identify the rows where the dependency condition is not satisfied
+                invalid_rows = df[~dependency_check]
+                
+                # Append the reason and explanation for rejection to the respective columns
+                reason_column = 'reason_of_rejection'
+                explanation_column = 'explanation_of_rejection'
+                df.loc[invalid_rows.index, reason_column] += ", invalid dependency"
+                df.loc[invalid_rows.index, explanation_column] = df.loc[invalid_rows.index, explanation_column].apply(
+                    lambda explanation: explanation + ", " if explanation else ""
+                ) + "Invalid dependency for " + dependent_field
+            except:
+                raise Exception("Config File Error: Invalid dependency condition for column {}".format(col))
             
         return df
 
@@ -238,6 +269,13 @@ class QualityGates:
     #lower level column checks
     def unique_values_check(self,df,column_names):
         ans=True
+        
+        #validate columns names
+        df_columns = df.columns.tolist()
+        list_set = set(column_names)
+        df_set = set(df_columns)
+        if (list_set.issubset(df_set)==False):
+            raise Exception("Config File Error: Columns names are not in the dataframe unique values check")
         for col in column_names:
             if df[col].duplicated().any():
                 print(col,"has duplicated values")
